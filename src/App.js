@@ -1,42 +1,42 @@
 // import react, firebase, and react router
-import React, { Component } from 'react';
-import { firebase, firestore } from './utils/firebase';
+import React, { Component } from "react";
+import { firebase, firestore } from "./utils/firebase";
 import {
   BrowserRouter as Router,
   Route,
   Redirect,
   withRouter
-} from 'react-router-dom';
+} from "react-router-dom";
 
 // import container
-import Login from './containers/logIn';
-import SignUp from './containers/signUp';
-import Home from './containers/home';
-import History from './containers/history';
-import About from './containers/about';
-import UserHome from './containers/userHome';
-import UserProfile from './containers/userProfile';
-import AboutUs from './containers/aboutUs';
+import Login from "./containers/logIn";
+import SignUp from "./containers/signUp";
+import Home from "./containers/home";
+import History from "./containers/history";
+import About from "./containers/about";
+import UserHome from "./containers/userHome";
+import UserProfile from "./containers/userProfile";
+import AboutUs from "./containers/aboutUs";
 
 // import components
-import NavBar from './components/navBar';
-import NavBarSignedIn from './components/navBarSignedIn';
-import Footer from './components/footers';
+import NavBar from "./components/navBar";
+import NavBarSignedIn from "./components/navBarSignedIn";
+import Footer from "./components/footers";
 
 // import css
-import './App.css';
+import "./App.css";
 
 const DEFAULTSTATE = {
   user: undefined,
   errorMsg: undefined,
   personalInfo: {
-    email: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    address: '',
-    city: '',
-    zip: ''
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    address: "",
+    city: "",
+    zip: ""
   }
 };
 
@@ -48,13 +48,13 @@ class App extends Component {
       user: undefined,
       errorMsg: undefined,
       personalInfo: {
-        email: '',
-        firstName: '',
-        lastName: '',
-        phone: '',
-        address: '',
-        city: '',
-        zip: ''
+        email: "",
+        firstName: "",
+        lastName: "",
+        phone: "",
+        address: "",
+        city: "",
+        zip: ""
       }
     };
 
@@ -62,13 +62,15 @@ class App extends Component {
     this.getDoc = this.getDoc.bind(this);
     this.trySignOut = this.trySignOut.bind(this);
     this.userProfilePageRedirect = this.userProfilePageRedirect.bind(this);
+  }
 
+  componentDidMount() {
     // firebase check if user signed in
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         this.setState({ user });
         this.getDoc();
-        this.props.history.push('/');
+        this.props.history.push("/");
       }
     });
   }
@@ -76,15 +78,15 @@ class App extends Component {
   // firebase add user info to data if first time signed in
   getDoc() {
     firestore
-      .collection('users')
+      .collection("users")
       .doc(this.state.user.uid)
       .get()
       .then(doc => {
         if (!doc.exists) {
-          console.log('No such document!');
+          console.log("No such document!");
 
           firestore
-            .collection('users')
+            .collection("users")
             .doc(this.state.user.uid)
             .set({
               email: this.state.user.email,
@@ -96,25 +98,25 @@ class App extends Component {
               zip: this.state.personalInfo.zip
             })
             .then(function() {
-              console.log('Document successfully written!');
+              console.log("Document successfully written!");
             })
             .catch(function(error) {
-              console.error('Error writing document: ', error);
+              console.error("Error writing document: ", error);
             });
         } else {
-          console.log('Document data:', doc.data());
+          console.log("Document data:", doc.data());
         }
 
         this.setState({ personalInfo: doc.data() });
       })
       .catch(err => {
-        console.log('Error getting document', err);
+        console.log("Error getting document", err);
       });
   }
 
   // redirect to Home Page (NOT WORKING AS OF NOW)
   redirectToHome() {
-    this.props.history.push('/');
+    this.props.history.push("/");
   }
 
   userProfilePageRedirect() {
@@ -139,18 +141,18 @@ class App extends Component {
       .signOut()
       .then(
         () => {
-          console.log('Signed Out');
+          console.log("Signed Out");
           this.redirectToHome();
           this.setState({ user: undefined });
         },
         function(error) {
-          console.error('Sign Out Error', error);
+          console.error("Sign Out Error", error);
         }
       );
   }
 
   render() {
-    if (typeof this.state.user === 'undefined') {
+    if (typeof this.state.user === "undefined") {
       return (
         <div className="frontApp">
           <NavBar />
@@ -176,7 +178,7 @@ class App extends Component {
           </section>
 
           <div className="footer">
-            <span> </span>{' '}
+            <span> </span>{" "}
             <a href="mailto:BottleGreen930@gmail.com">
               BottleGreen930@gmail.com
             </a>
@@ -197,7 +199,12 @@ class App extends Component {
             <Route
               exact
               path="/"
-              render={() => <UserHome userUid={this.state.user.uid} />}
+              render={() => (
+                <UserHome
+                  user={this.state.user}
+                  personalInfo={this.state.personalInfo}
+                />
+              )}
             />
             <Route
               exact
@@ -208,7 +215,7 @@ class App extends Component {
           </div>
 
           <div className="footer">
-            <span />{' '}
+            <span />{" "}
             <a href="mailto:BottleGreen930@gmail.com">
               BottleGreen930@gmail.com
             </a>

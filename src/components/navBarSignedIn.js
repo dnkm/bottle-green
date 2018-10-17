@@ -1,49 +1,75 @@
-import React, {Component} from 'react';
-import './navBarSignedIn.css';
-import {BrowserRouter as Router} from 'react-router-dom';
+import React, { Component } from "react";
+import "./navBarSignedIn.css";
+import { Link } from "react-router-dom";
 
-const NavBarSignedIn = ( {trySignOut} ) => {
+const NavBarSignedIn = ({ trySignOut }) => {
+  return (
+    <div>
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <a className="navbar-brand" to="/">
+          Bottle Green
+        </a>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon" />
+        </button>
 
-    return (
-        <Router>
-        <div>
-            <nav className="navbar navbar-expand-lg navbar-light bg-light">
-                <a className="navbar-brand" href="../">Bottle Green</a>
-                <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span className="navbar-toggler-icon"></span>
-                </button>
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul className="navbar-nav mr-auto">
+            <li className="nav-item active">
+              <Link className="nav-link" to="/">
+                Home <span className="sr-only">(current)</span>
+              </Link>
+            </li>
+            <li className="nav-item active">
+              <Link className="nav-link" to="/aboutus">
+                About Us<span className="sr-only">(current)</span>
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/history">
+                History
+              </Link>
+            </li>
+          </ul>
 
-                <div className="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul className="navbar-nav mr-auto">
-                        <li className="nav-item active">
-                            <a className="nav-link" href="/">Home <span className="sr-only">(current)</span></a>
-                        </li>
-                        <li className="nav-item active">
-                            <a className="nav-link" href="/aboutus">About Us<span className="sr-only">(current)</span></a>
-                        </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="/history">History</a>
-                        </li>
-                        
-                    </ul>
-
-                    <div className="nav-item dropdown">
-                        <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Profile
-                        </a>
-                        <div className="dropdown-menu" id="bootstrap-overrides" aria-labelledby="navbarDropdown">
-                            <a className="dropdown-item" href="/profile">My Profile</a>
-                            <div className="dropdown-divider"></div>
-                            <a className="dropdown-item" onClick = {trySignOut}>sign out</a>
-                        </div>
-                    </div>
-
-                    
-                </div>
-            </nav>
+          <div className="nav-item dropdown">
+            <a
+              className="nav-link dropdown-toggle"
+              href="#"
+              id="navbarDropdown"
+              role="button"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+              Profile
+            </a>
+            <div
+              className="dropdown-menu"
+              id="bootstrap-overrides"
+              aria-labelledby="navbarDropdown"
+            >
+              <Link className="dropdown-item" to="/profile">
+                My Profile
+              </Link>
+              <div className="dropdown-divider" />
+              <a className="dropdown-item" onClick={trySignOut}>
+                sign out
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
     </div>
-    </Router>
-    )
-}
+  );
+};
 
 export default NavBarSignedIn;

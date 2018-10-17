@@ -1,6 +1,8 @@
-import React, { Component } from 'react';
-import { firestore, firebase } from '../utils/firebase';
-import './userHome.css';
+import React, { Component } from "react";
+import { firestore, firebase } from "../utils/firebase";
+import DeliveryMap from "../components/DeliveryMap";
+
+import "./userHome.css";
 // import {} from '../components/calendar';
 
 export default class UserHome extends Component {
@@ -8,10 +10,10 @@ export default class UserHome extends Component {
     super(props);
 
     this.state = {
-      userUid: this.props.userUid,
       dates: [],
       loading: false,
-      index: 0
+      index: 0,
+      nextDate: undefined
     };
 
     let d = new Date();
@@ -24,100 +26,79 @@ export default class UserHome extends Component {
     }
 
     // this.sortDocument = this.sortDocument.bind(this);
-    this.tryPutData = this.tryPutData.bind(this);
+    this.signupForDate = this.signupForDate.bind(this);
   }
 
   formatDate(d) {
     return (
       d.getFullYear() +
-      '/' +
-      (d.getMonth() + 1 < 10 ? '0' : '') +
+      "/" +
+      (d.getMonth() + 1 < 10 ? "0" : "") +
       (d.getMonth() + 1) +
-      '/' +
+      "/" +
       d.getDate()
     );
   }
 
-  tryDeleteData() {
-    let temp = [];
-
+  cancelSignup() {
     firestore
-      .collection('pickUpBottles')
+      .collection("appointments")
+      .where("uid", "==", this.props.user.uid)
+      .orderBy("nextDate", "desc")
+      .limit(1)
       .get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          doc.data().users.forEach(a => {
-            if (!(this.state.userUid == a)) {
-              temp.push(a);
-            }
-          });
-        });
-      });
-
-    console.log(temp);
-    let a = this.state.dates[this.state.index].toString();
-
-    firestore
-      .collection('pickUpBottles')
-      .doc(a)
-      .set(
-        {
-          users: temp
-        },
-        { merge: true }
-      )
-      .then(function() {
-        console.log('Document successfully written!');
-        alert('you are now not signed up for this date');
-      })
-      .catch(function(error) {
-        console.error('Error writing document: ', error);
+      .then(snapshot => {
+        if (snapshot.size > 0) {
+          let doc = snapshot.docs[0];
+          firestore
+            .collection("appointments")
+            .doc(doc.id)
+            .delete()
+            .then(() => {
+              this.setState({ nextDate: undefined });
+            });
+        }
       });
   }
 
-  tryPutData() {
-    let temp = [];
-
+  signupForDate() {
+    const nextDate = this.state.dates[this.state.index];
     firestore
-      .collection('pickUpBottles')
-      .get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          doc.data().users.forEach(a => {
-            temp.push(a);
-
-            if (this.state.userUid == a) {
-              return;
-              console.log('working');
-            }
-          });
-        });
-      });
-
-    temp.push(this.state.userUid);
-
-    let a = this.state.dates[this.state.index].toString();
-    console.log(temp);
-
-    firestore
-      .collection('pickUpBottles')
-      .doc(a)
-      .set(
-        {
-          users: temp
-        },
-        { merge: true }
-      )
-      .then(function() {
-        console.log('Document successfully written!');
-        alert('you are now signed up for this date');
+      .collection("appointments")
+      .add({
+        uid: this.props.user.uid,
+        nextDate
       })
-      .catch(function(error) {
-        console.error('Error writing document: ', error);
+      .then(decRef => {
+        this.setState(
+          {
+            nextDate
+          },
+          () => console.log("appointment made", this.state)
+        );
       });
   }
 
-  componentDidMount() {}
+  componentDidMount() {
+    firestore
+      .collection("appointments")
+      .where("uid", "==", this.props.user.uid)
+      .limit(1)
+      .get()
+      .then(snapshot => {
+        if (snapshot.size > 0) {
+          let doc = snapshot.docs[0];
+          this.setState(
+            {
+              nextDate: doc.data().nextDate
+            },
+            () => {
+              console.log("loading appoinmtnets", this.state);
+            }
+          );
+        }
+      });
+  }
 
   // sortDocument(collection) {
   //   let d = new Date();
@@ -149,6 +130,45 @@ export default class UserHome extends Component {
   render() {
     if (this.state.loading) {
       return <div>loading</div>;
+    } else if (this.state.nextDate) {
+      return (
+        <div className="userHome">
+          <h1 className="header" style={{ color: "#9fc753" }}>
+            You Bottles Are Scheduled for Pickup
+          </h1>
+          <div className="Next">Pickup Date:</div>
+          <div>
+            <div className="Dates">{this.state.dates[this.state.index]}</div>
+            <div className="but">
+              <button
+                className="dBefore"
+                onClick={() => {
+                  this.cancelSignup();
+                }}
+              >
+                Cancel Sign up for this Date
+              </button>
+
+              <br />
+              <div>{this.props.personalInfo.address}</div>
+              <div>{this.props.personalInfo.city}</div>
+              <div>{this.props.personalInfo.zip}</div>
+            </div>
+          </div>
+
+          {this.props.personalInfo.address.length > 4 && (
+            <DeliveryMap
+              address={
+                this.props.personalInfo.address +
+                "+" +
+                this.props.personalInfo.city +
+                "+" +
+                this.props.personalInfo.zip
+              }
+            />
+          )}
+        </div>
+      );
     } else {
       return (
         <div className="userHome">
@@ -157,43 +177,35 @@ export default class UserHome extends Component {
           <div>
             <div className="Dates">{this.state.dates[this.state.index]}</div>
             <div className="but">
-            <button
-              className="dBefore"
-              onClick={() => {
-                if (0 != this.state.index) {
-                  let index = this.state.index;
-                  this.setState({ index: index - 1 });
-                }
-              }}>
-              Date Before
-            </button>
+              <button
+                className="dBefore"
+                onClick={() => {
+                  if (0 != this.state.index) {
+                    let index = this.state.index;
+                    this.setState({ index: index - 1 });
+                  }
+                }}
+              >
+                Date Before
+              </button>
 
-            <span />
+              <span />
 
-            <button
-              className="dAfter"
-              onClick={() => {
-                if (this.state.dates.length - 1 != this.state.index) {
-                  let index = this.state.index;
-                  this.setState({ index: index + 1 });
-                }
-              }}>
-              Date After
-            </button>
+              <button
+                className="dAfter"
+                onClick={() => {
+                  if (this.state.dates.length - 1 != this.state.index) {
+                    let index = this.state.index;
+                    this.setState({ index: index + 1 });
+                  }
+                }}
+              >
+                Date After
+              </button>
 
-            <button
-              onClick={() => {
-                this.tryPutData();
-              }}>
-              Sign up for this Date
-            </button>
-
-            <button
-              onClick={() => {
-                this.tryDeleteData();
-              }}>
-              Cancel Sign up for this Date
-            </button>
+              <button onClick={this.signupForDate}>
+                Sign up for this Date
+              </button>
             </div>
           </div>
         </div>
